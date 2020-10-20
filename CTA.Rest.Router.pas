@@ -89,7 +89,7 @@ uses
   System.StrUtils, System.SysUtils;
 
 const
-  SUPPORTED_TYPES = [tkString, tkLString, tkWString, tkUString, tkWChar, tkChar, tkVariant, tkInteger, tkInt64];
+  SUPPORTED_TYPES = [tkString, tkLString, tkWString, tkUString, tkInteger, tkInt64];
 
 function GetPath(AType: TRttiType): String;
 var
@@ -369,9 +369,8 @@ begin
         lMethod.Method.Invoke(lController, lMethodParams);
 
         lController.OnAfterAction(lMethod.Method.Name);
-
-        Exit(True);
       end;
+      Exit(True);
     finally
       lController.Free;
     end;
