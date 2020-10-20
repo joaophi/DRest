@@ -357,7 +357,7 @@ begin
 
     if not(mtAny in lMethod.Methods)
       and not(ARequest.MethodType in lMethod.Methods) then
-      Exit;
+      Continue;
 
     lMethodParams := Copy(lRouteParams, 0, Length(lMethod.Constructorr.GetParameters));
     lController := lMethod.Constructorr.Invoke(lMethod.Clazz, lMethodParams).AsType<TController>;
