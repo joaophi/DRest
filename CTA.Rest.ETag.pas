@@ -29,12 +29,10 @@ var
   lETag: string;
   lRequestETag: string;
 begin
-  if (Response.ContentStream = nil) and (Response.Content <> EmptyStr) then
-    Response.ContentStream := TStringStream.Create(Response.Content);
-
   if (Response.ContentStream = nil) then
     Exit;
 
+  Response.ContentStream.Position := 0;
   lETag := HashStream(Response.ContentStream);
   Response.SetCustomHeader('ETag', lETag);
 
@@ -43,8 +41,8 @@ begin
   if (lETag <> '') and (lRequestETag = lETag) then
   begin
     Response.StatusCode := HTTP_STATUS.NotModified;
-    Response.Content := '';
-    Response.ContentStream := nil;
+    Response.ContentType := '';
+    Response.ContentStream := TNullStream.Create;
   end;
 end;
 
