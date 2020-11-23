@@ -29,9 +29,6 @@ var
   lMemStream: TMemoryStream;
   lZipStream: TZCompressionStream;
 begin
-  if (Response.ContentStream = nil) and (Response.Content <> EmptyStr) then
-    Response.ContentStream := TStringStream.Create(Response.Content);
-
   if (Response.ContentStream = nil) or (Response.ContentStream.Size < 1024) then
     Exit;
 

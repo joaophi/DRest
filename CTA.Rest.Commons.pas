@@ -3,7 +3,7 @@ unit CTA.Rest.Commons;
 interface
 
 uses
-  System.SysUtils, Web.HTTPApp;
+  System.SysUtils, Web.HTTPApp, System.Classes;
 
 type
   TMethods = set of TMethodType;
@@ -61,7 +61,8 @@ type
     FStatusCode: Integer;
   public
     constructor Create(const Msg: string; const StatusCode: Integer = HTTP_STATUS.InternalServerError); reintroduce;
-    constructor CreateFmt(const Msg: string; const Args: array of const; const StatusCode: Integer = HTTP_STATUS.InternalServerError); reintroduce;
+    constructor CreateFmt(const Msg: string; const Args: array of const;
+      const StatusCode: Integer = HTTP_STATUS.InternalServerError); reintroduce;
 
     property StatusCode: Integer read FStatusCode write FStatusCode;
   end;
@@ -70,7 +71,7 @@ type
   private
     FPath: String;
   public
-    constructor Create(const APath: String = '/');
+    constructor Create(const APath: String);
     property Path: String read FPath;
   end;
 
@@ -80,6 +81,15 @@ type
   public
     constructor Create(const AMethods: TMethods);
     property Methods: TMethods read FMethods;
+  end;
+
+  { TNullStream }
+
+  TNullStream = class(TStream)
+  public
+    function Read(var Buffer; Count: Longint): Longint; override;
+    function Write(const Buffer; Count: Longint): Longint; override;
+    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; overload; override;
   end;
 
 implementation
@@ -105,7 +115,7 @@ end;
 
 constructor PathAttribute.Create(const APath: String);
 begin
-  FPath := LowerCase(Trim(APath));
+  FPath := APath;
 end;
 
 { MethodsAttribute }
@@ -113,6 +123,23 @@ end;
 constructor MethodsAttribute.Create(const AMethods: TMethods);
 begin
   FMethods := AMethods;
+end;
+
+{ TNullStream }
+
+function TNullStream.Read(var Buffer; Count: Longint): Longint;
+begin
+  Result := 0;
+end;
+
+function TNullStream.Write(const Buffer; Count: Longint): Longint;
+begin
+  Result := 0;
+end;
+
+function TNullStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+begin
+  Result := 0;
 end;
 
 end.

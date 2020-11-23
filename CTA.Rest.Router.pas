@@ -12,7 +12,7 @@ type
     FTypeKind: TTypeKind;
     FValue: TValue;
   public
-    class function New(ATypeKind: TTypeKind; AValue: TValue): TParam; static;
+    class function New(const ATypeKind: TTypeKind; const AValue: TValue): TParam; static;
 
     property TypeKind: TTypeKind read FTypeKind write FTypeKind;
     property Value: TValue read FValue write FValue;
@@ -25,8 +25,8 @@ type
     FConstructor: TRttiMethod;
     FMethod: TRttiMethod;
   public
-    class function New(const AClass: TControllerClazz; const AMethods: TMethods; AConstructor: TRttiMethod;
-      AMethod: TRttiMethod): TMethod; static;
+    class function New(const AClass: TControllerClazz; const AMethods: TMethods; const AConstructor: TRttiMethod;
+      const AMethod: TRttiMethod): TMethod; static;
 
     property Clazz: TControllerClazz read FClazz write FClazz;
     property Methods: TMethods read FMethods write FMethods;
@@ -36,19 +36,19 @@ type
 
   IRoute = interface(IInterface)
     ['{5909C777-7B03-47D2-BE8A-31AA9D7248D7}']
-    procedure AddMethod(const AClass: TControllerClazz; const AMethods: TMethods; AConstructor: TRttiMethod;
-      AMethod: TRttiMethod);
+    procedure AddMethod(const AClass: TControllerClazz; const AMethods: TMethods; const AConstructor: TRttiMethod;
+      const AMethod: TRttiMethod);
 
     function AddChild(const APath: String): IRoute; overload;
     function AddChild(const AParam: TTypeKind): IRoute; overload;
 
-    function GetRoute(const APath: string; out ARoute: IRoute; AParams: TList<TValue>): Boolean;
+    function GetRoute(const APath: string; out ARoute: IRoute; const AParams: TList<TValue>): Boolean;
     function GetMethods: TList<TMethod>;
   end;
 
   IRouter = interface(IInterface)
     ['{7310FCE2-C37B-4C07-AD60-D5C52A3B13F9}']
-    function Execute(ARequest: TWebRequest; AResponse: TWebResponse): Boolean;
+    function Execute(const ARequest: TWebRequest; const AResponse: TWebResponse): Boolean;
   end;
 
   TRoute = class(TInterfacedObject, IRoute)
@@ -60,13 +60,13 @@ type
     constructor Create; overload;
     destructor Destroy; override;
 
-    procedure AddMethod(const AClass: TControllerClazz; const AMethods: TMethods; AConstructor: TRttiMethod;
-      AMethod: TRttiMethod);
+    procedure AddMethod(const AClass: TControllerClazz; const AMethods: TMethods; const AConstructor: TRttiMethod;
+      const AMethod: TRttiMethod);
 
     function AddChild(const APath: String): IRoute; overload;
     function AddChild(const AParam: TTypeKind): IRoute; overload;
 
-    function GetRoute(const APath: string; out AEndpoint: IRoute; AParams: TList<TValue>): Boolean;
+    function GetRoute(const APath: string; out AEndpoint: IRoute; const AParams: TList<TValue>): Boolean;
     function GetMethods: TList<TMethod>;
   end;
 
@@ -75,12 +75,12 @@ type
     FContext: TRttiContext;
     FRoute: IRoute;
 
-    procedure SetupController(AController: TControllerClazz);
-    procedure SetupMethod(ARoute: IRoute; AController: TControllerClazz; AConstructor: TRttiMethod;
-      AMethod: TRttiMethod);
+    procedure SetupController(const AController: TControllerClazz);
+    procedure SetupMethod(ARoute: IRoute; const AController: TControllerClazz; const AConstructor: TRttiMethod;
+      const AMethod: TRttiMethod);
   public
-    constructor Create(AControllers: array of TControllerClazz);
-    function Execute(ARequest: TWebRequest; AResponse: TWebResponse): Boolean;
+    constructor Create(const AControllers: array of TControllerClazz);
+    function Execute(const ARequest: TWebRequest; const AResponse: TWebResponse): Boolean;
   end;
 
 implementation
@@ -108,7 +108,7 @@ begin
   until AType = nil;
 end;
 
-function Setup(ARoute: IRoute; APath: string; AMethod: TRttiMethod): IRoute;
+function Setup(const ARoute: IRoute; const APath: string; AMethod: TRttiMethod): IRoute;
 var
   I: Integer;
   lPathSegment: string;
@@ -129,7 +129,7 @@ begin
     I := 2
   else
     I := 0;
-  for lPathSegment in SplitString(APath, '/') do
+  for lPathSegment in SplitString(LowerCase(APath), '/') do
     if StartsStr(':', lPathSegment) then
     begin
       lParam := AMethod.GetParameters[I];
@@ -144,7 +144,7 @@ begin
       Result := Result.AddChild(lPathSegment);
 end;
 
-function GetTypeKinds(ATypes: array of TTypeKind; APath: string; out AParam: TParam): Boolean;
+function GetTypeKinds(const ATypes: array of TTypeKind; const APath: string; out AParam: TParam): Boolean;
 var
   I: Integer;
   lValue: TValue;
@@ -174,7 +174,7 @@ end;
 
 { TParam }
 
-class function TParam.New(ATypeKind: TTypeKind; AValue: TValue): TParam;
+class function TParam.New(const ATypeKind: TTypeKind; const AValue: TValue): TParam;
 begin
   Result.TypeKind := ATypeKind;
   Result.Value := AValue;
@@ -182,8 +182,8 @@ end;
 
 { TMethod }
 
-class function TMethod.New(const AClass: TControllerClazz; const AMethods: TMethods; AConstructor: TRttiMethod;
-  AMethod: TRttiMethod): TMethod;
+class function TMethod.New(const AClass: TControllerClazz; const AMethods: TMethods; const AConstructor: TRttiMethod;
+  const AMethod: TRttiMethod): TMethod;
 begin
   Result.Clazz := AClass;
   Result.Methods := AMethods;
@@ -209,8 +209,8 @@ begin
   inherited;
 end;
 
-procedure TRoute.AddMethod(const AClass: TControllerClazz; const AMethods: TMethods; AConstructor: TRttiMethod;
-  AMethod: TRttiMethod);
+procedure TRoute.AddMethod(const AClass: TControllerClazz; const AMethods: TMethods; const AConstructor: TRttiMethod;
+  const AMethod: TRttiMethod);
 begin
   FMethods.Add(TMethod.New(AClass, AMethods, AConstructor, AMethod));
 end;
@@ -235,14 +235,14 @@ begin
   end;
 end;
 
-function TRoute.GetRoute(const APath: string; out AEndpoint: IRoute; AParams: TList<TValue>): Boolean;
+function TRoute.GetRoute(const APath: string; out AEndpoint: IRoute; const AParams: TList<TValue>): Boolean;
 var
   lParam: TParam;
 begin
   Result := True;
   if APath = EmptyStr then
     AEndpoint := Self
-  else if FPathChilds.TryGetValue(APath, AEndpoint) then
+  else if FPathChilds.TryGetValue(LowerCase(APath), AEndpoint) then
   else if GetTypeKinds(FParamChilds.Keys.ToArray, APath, lParam) then
   begin
     AEndpoint := FParamChilds[lParam.TypeKind];
@@ -259,7 +259,7 @@ end;
 
 { TRouter }
 
-procedure TRouter.SetupController(AController: TControllerClazz);
+procedure TRouter.SetupController(const AController: TControllerClazz);
 var
   lType: TRttiType;
   lPath: string;
@@ -281,7 +281,8 @@ begin
     SetupMethod(lRoute, AController, lConstructor, lMethod);
 end;
 
-procedure TRouter.SetupMethod(ARoute: IRoute; AController: TControllerClazz; AConstructor, AMethod: TRttiMethod);
+procedure TRouter.SetupMethod(ARoute: IRoute; const AController: TControllerClazz; const AConstructor: TRttiMethod;
+  const AMethod: TRttiMethod);
 var
   lPath: PathAttribute;
   lMethods: MethodsAttribute;
@@ -311,7 +312,7 @@ begin
   ARoute.AddMethod(AController, lMethodsTypes, AConstructor, AMethod);
 end;
 
-constructor TRouter.Create(AControllers: array of TControllerClazz);
+constructor TRouter.Create(const AControllers: array of TControllerClazz);
 var
   lController: TControllerClazz;
 begin
@@ -321,7 +322,7 @@ begin
     SetupController(lController);
 end;
 
-function TRouter.Execute(ARequest: TWebRequest; AResponse: TWebResponse): Boolean;
+function TRouter.Execute(const ARequest: TWebRequest; const AResponse: TWebResponse): Boolean;
 var
   lParams: TList<TValue>;
   lRoute: IRoute;

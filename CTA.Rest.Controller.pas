@@ -13,10 +13,10 @@ type
     FRequest: TWebRequest;
     FResponse: TWebResponse;
   protected
-    procedure Render(ACDS: TDataSet; AOwns: Boolean = True); overload;
-    procedure Render(AObject: TJsonBaseObject; AOwns: Boolean = True); overload;
-    procedure Render(AStream: TFileStream); overload;
     procedure Render(AStream: TStream; AContentType: String); overload;
+    procedure Render(AStream: TFileStream); overload;
+    procedure Render(AObject: TJsonBaseObject; AOwns: Boolean = True); overload;
+    procedure Render(ACDS: TDataSet; AOwns: Boolean = True); overload;
     procedure Render204NoContent;
 
     property Request: TWebRequest read FRequest;
@@ -49,28 +49,46 @@ procedure TController.OnAfterAction(const AActionName: string);
 begin
 end;
 
-procedure TController.Render(AObject: TJsonBaseObject; AOwns: Boolean);
-var
-  lResponse: TBytes;
-begin
-  try
-    lResponse := TEncoding.Convert(TEncoding.Default, TEncoding.UTF8, TEncoding.Default.GetBytes(AObject.ToJSON));
-    Render(TBytesStream.Create(lResponse), 'application/json; charset=UTF-8');
-  finally
-    if AOwns then
-      AObject.Free;
-  end;
-end;
-
 procedure TController.Render(AStream: TStream; AContentType: String);
 begin
   Response.ContentType := AnsiString(AContentType);
   Response.ContentStream := AStream;
 end;
 
+procedure TController.Render(AStream: TFileStream);
+var
+  lMimeTable: TIdMimeTable;
+begin
+  lMimeTable := TIdMimeTable.Create;
+  try
+    Render(AStream, lMimeTable.GetFileMIMEType(AStream.FileName));
+  finally
+    lMimeTable.Free;
+  end
+end;
+
+procedure TController.Render(AObject: TJsonBaseObject; AOwns: Boolean);
+var
+  lResponse: TMemoryStream;
+begin
+  try
+    lResponse := TMemoryStream.Create;
+    try
+      AObject.SaveToStream(lResponse);
+      Render(lResponse, 'application/json; charset=UTF-8');
+    except
+      lResponse.Free;
+      raise;
+    end;
+  finally
+    if AOwns then
+      AObject.Free;
+  end;
+end;
+
 procedure TController.Render(ACDS: TDataSet; AOwns: Boolean);
 
-  procedure ConvertField(AResult: TJsonObject; AName: string; AField: TField);
+  procedure ConvertField(AResult: TJsonObject; const AName: string; AField: TField);
   begin
     if AField.IsNull then
       AResult[AName] := Null
@@ -161,24 +179,11 @@ begin
   end;
 end;
 
-procedure TController.Render(AStream: TFileStream);
-var
-  lMimeTable: TIdMimeTable;
-begin
-  lMimeTable := TIdMimeTable.Create;
-  try
-    Render(AStream, lMimeTable.GetFileMIMEType(AStream.FileName));
-  finally
-    lMimeTable.Free;
-  end
-end;
-
 procedure TController.Render204NoContent;
 begin
   Response.StatusCode := HTTP_STATUS.NoContent;
   Response.ContentType := '';
-  Response.Content := '';
-  Response.ContentStream := nil;
+  Response.ContentStream := TNullStream.Create;
 end;
 
 end.
